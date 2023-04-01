@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Booking System of Smart Computer Lab</title>
+    <!-- *Note: You must have internet connection on your laptop or pc other wise below code is not working -->
+    <!-- CSS for full calender -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.min.css" rel="stylesheet" />
+    <!-- JS for jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- JS for full calender -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.min.js"></script>
+    <!-- bootstrap css and js -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <h5 align="center">Booking System of Smart Computer Lab - Mahinda Rajapaksha College </h5>
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Start popup dialog box -->
+    <div class="modal fade" id="event_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">Add New Event</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">x</span>
+				</button>
+                </div>
+                <div class="modal-body">
+                    <div class="img-container">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="class_name">Class Name</label>
+                                    <input type="text" name="class_name" id="class_name" class="form-control" placeholder="Enter your class like '6A' ">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="teacher_name">Teacher's Name</label>
+                                    <input type="text" name="teacher_name" id="teacher_name" class="form-control" placeholder="your name here ">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="contact_no">Contact No</label>
+                                    <input type="number" name="contact_no" id="contact_no" class="form-control" placeholder="071xxxxxxxx">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="date">Date</label>
+                                    <input type="date" name="date" id="date" class="form-control onlydatepicker" placeholder="Event start date">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="period">Period</label> <br>
+                                    <select class="form-control" name="period" id="period">
+										<option  name="1" id="1">1 Period</option>
+										<option  name="2" id="2">2 Period</option>
+										<option  name="3" id="3">3 Period</option>
+										<option  name="4" id="4">4 Period</option>
+										<option  name="5" id="5">5 Period</option>
+										<option  name="6" id="6">6 Period</option>
+										<option  name="7" id="7">7 Period</option>
+										<option  name="8" id="8">8 Period</option>
+									</select>
+                                    <!-- <input type="date" name="event_end_date" id="event_end_date" class="form-control" placeholder="Event end date"> -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="save_event()">Save Event</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End popup dialog box -->
+    <script>
+        function preventDrag(e) {
+            e.preventDefault();
+        }
+        window.addEventListener("dragstart", preventDrag);
+        window.addEventListener("dragend", preventDrag);
+    </script>
+
+    <br>
+
+</body>
+<script>
+    $(document).ready(function() {
+        display_events();
+    }); //end document.ready block
+
+    function display_events() {
+        var events = new Array();
+        $.ajax({
+            url: 'display_event.php',
+            dataType: 'json',
+            success: function(response) {
+
+                var result = response.data;
+                $.each(result, function(i, item) {
+                    events.push({
+                        event_id: result[i].event_id,
+                        title: 'Period ' + result[i].period + ' - ' + result[i].class_name,
+                        class_name: result[i].class_name,
+                        start: result[i].date,
+                        teacher_name: result[i].teacher_name,
+                        contact_no: result[i].contact_no,
+                        period: result[i].period,
+                        // end: result[i].end,
+                        color: result[i].color,
+                        // url: result[i].url
+                    });
+                })
+                var calendar = $('#calendar').fullCalendar({
+                    defaultView: 'month',
+                    timeZone: 'local',
+                    editable: true,
+                    selectable: true,
+                    selectHelper: true,
+                    longPressDelay: 1,
+                    select: function(start, end) {
+                        //alert(start);
+                        //alert(end);
+                        $('#date').val(moment(start).format('YYYY-MM-DD'));
+                        // $('#event_end_date').val(moment(end).format('YYYY-MM-DD'));
+                        $('#event_entry_modal').modal('show');
+                    },
+                    events: events,
+                    eventRender: function(event, element, view) {
+                        element.bind('click', function() {
+                            alert(
+                                "Class : " + event.class_name + '\n ' +
+                                "Teacher Name: " + event.teacher_name + '\n ' +
+                                // "Teacher's Contact Number : " + event.contact_no + '\n ' +
+                                "period : " + event.period + '\n ');
+                        });
+                    }
+                }); //end fullCalendar block	
+            }, //end success block
+            error: function(xhr, status) {
+                alert(response.msg);
+            }
+        }); //end ajax block	
+    }
+
+
+    function save_event() {
+        var class_name = $("#class_name").val();
+        var teacher_name = $("#teacher_name").val();
+        var contact_no = $("#contact_no").val();
+        var date = $("#date").val();
+        var period = $("#period").val();
+        if (class_name == "" || teacher_name == "" || contact_no == "" || date == "" || period == "") {
+            alert("Please enter all required details.");
+            return false;
+        }
+        $.ajax({
+            url: "save_event.php",
+            type: "POST",
+            dataType: 'json',
+            data: {
+                class_name: class_name,
+                teacher_name: teacher_name,
+                contact_no: contact_no,
+                date: date,
+                period: period
+            },
+            success: function(response) {
+                $('#event_entry_modal').modal('hide');
+                if (response.status == true) {
+                    alert(response.msg);
+                    location.reload();
+                } else {
+                    alert(response.msg);
+                }
+            },
+            error: function(xhr, status) {
+                console.log('ajax error = ' + xhr.statusText);
+                alert(response.msg);
+            }
+        });
+
+        return false;
+    }
+</script>
+
+</html>
